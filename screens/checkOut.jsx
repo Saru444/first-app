@@ -12,43 +12,47 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TextInput } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
+import { log } from "react-native-reanimated";
+import { useCartContext } from "../.expo/Context/cartContext";
 
 const CheckOut = () => {
-  const [list, setList] = useState([]);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const navigation = useNavigation();
+
   const [personInfo, setPersonInfo] = useState({ addresses: [] });
   const [name, setName] = useState("");
+  const [leverans, setLeverans] = useState([]);
+  const [faktura, setFaktura] = useState([]);
   const [message, setMessage] = useState("");
   const [cost, setCost] = useState("");
 
-  const updateData = async () => {
-    const value = await AsyncStorage.getItem("key");
-    let list = [];
-    let totalPrice = 0;
-    console.log(value);
-    if (value !== null) {
-      list = JSON.parse(value);
-      for (var i in list) {
-        totalPrice += list[i].Price * list[i].quantity;
-      }
-    }
-    setList(list);
-    setTotalPrice(totalPrice);
+  const [selectLeveransOption, setSelectLeveransOption] = useState("");
+  const [selectFakturaOption, setSelectFakturaOption] = useState("");
+
+  const [adressID, setAdressID] = useState("");
+  const [delivaryAdressID, setDelivaryAdressID] = useState("");
+  const { list, totalPrice, cleanCart } = useCartContext();
+
+  /// Leverans
+  const onPressSelectLeveransButton = (addressId) => {
+    const updatedItems = selectLeveransOption.includes(addressId)
+      ? selectLeveransOption.filter((item) => item == addressId)
+      : addressId;
+
+    setSelectLeveransOption([updatedItems]);
+    setDelivaryAdressID(updatedItems);
   };
 
-  useEffect(() => {
-    updateData();
-    console.log(list);
-    console.log(totalPrice);
-  }, []);
-
-  /*   useEffect(() => {
-    setMessage(message);
-  }, []);
-
-  useEffect(() => {
-    setCost(cost);
-  }, []); */
+  /// Faktura
+  const onPressSelectFakturaButton = async (addressId) => {
+    const updatedItems = selectFakturaOption.includes(addressId)
+      ? selectFakturaOption.filter((item) => item == addressId)
+      : addressId;
+    setSelectFakturaOption([updatedItems]);
+    setAdressID(updatedItems);
+  };
 
   const getData = async () => {
     const userName = await AsyncStorage.getItem("userkey");
@@ -61,6 +65,7 @@ const CheckOut = () => {
   useEffect(() => {
     getData();
   }, []);
+
   useEffect(() => {
     if (name === "") return;
     axios
@@ -68,12 +73,38 @@ const CheckOut = () => {
       .then((res) => {
         let personInfo = res.data;
         setPersonInfo(personInfo);
-        console.log(personInfo.id);
-        console.log(personInfo.addresses);
+
+        let faktura = personInfo.addresses.filter(
+          (item) => item.addressType === "Faktura"
+        );
+        setFaktura(faktura);
+
+        let leverans = personInfo.addresses.filter(
+          (item) => item.addressType === "Leverans"
+        );
+        setLeverans(leverans);
       });
   }, [name]);
 
   const onPressCheck = async () => {
+    console.log("adressID:", adressID);
+    let activeAddress = {};
+    for (let address of personInfo.addresses) {
+      if (address.id === adressID) {
+        activeAddress = address;
+        break;
+      }
+    }
+    console.log("activeAddress:", activeAddress);
+    let activeDeliveryAddress = {};
+    for (let address of personInfo.addresses) {
+      if (address.id === delivaryAdressID) {
+        activeDeliveryAddress = address;
+        break;
+      }
+    }
+    console.log("activeDeliveryAddress:", activeDeliveryAddress);
+
     const check = await fetch(
       "https://94f6-81-226-206-31.eu.ngrok.io/api/Order/createorder",
       {
@@ -83,19 +114,32 @@ const CheckOut = () => {
         },
         body: JSON.stringify({
           userId: personInfo.id,
-          orderItems:list,
+          orderItems: list,
           totalPrice: totalPrice,
           creationTime: new Date(),
-          addresses: personInfo.addresses,
+          addresses: [activeDeliveryAddress, activeAddress],
           message: message,
           costCenter: cost,
           status: "",
-        }),
-      }
+        }),       
+      }    
     );
     console.log(check.status);
 
-    if (check.status !== 200) {
+    console.log(activeAddress, activeDeliveryAddress)
+    if (delivaryAdressID==="" || adressID==="") {
+      Alert.alert("warning", "Du måste välja leverans/faktura address!", [
+        { text: "ok" },
+      ]);
+      setSelectLeveransOption(""); 
+      setSelectFakturaOption("");
+      return;
+    }
+    if (check.status == 200) {
+      navigation.navigate("klart");
+      cleanCart();
+      return;
+    } else {
       Alert.alert("warning", "something is wrong!", [{ text: "ok" }]);
       return;
     }
@@ -107,14 +151,14 @@ const CheckOut = () => {
           <Text style={styles.header}>BESTÄLLNING</Text>
         </View>
         <FlatList
-          style={styles.flatList}
+          style={styles.flatListCart}
           data={list}
           renderItem={({ item }) => (
             <View style={styles.cartInfo}>
               <View style={styles.picContainer}>
-                <Image style={styles.image} source={{ uri: item. imgUrl}} />
+                <Image style={styles.image} source={{ uri: item.imgUrl }} />
               </View>
-              <View>
+              <View style={styles.textArea}>
                 <Text style={styles.title}>{item.name}</Text>
                 <Text style={styles.smallText}>
                   {item.Price * item.quantity} kr
@@ -128,21 +172,82 @@ const CheckOut = () => {
         <View style={styles.checkAddress}>
           <Text style={styles.header2}>PAKETET SKICKAS TILL</Text>
         </View>
-        <View style={styles.addressInfo}>
-          <Text>ArbogaGatan 27</Text>
-          <Text>73232</Text>
-          <Text>Arboga</Text>
-          <Text>Leverans</Text>
-        </View>
+        <FlatList
+          style={styles.flatList}
+          data={leverans}
+          renderItem={({ item }) => {
+            return (
+              <TouchableOpacity
+                onPress={() => onPressSelectLeveransButton(item.id)}
+                style={({ press }) => [
+                  {
+                    backgroundColor: press ? "orange" : "red",
+                  },
+                ]}
+              >
+                <View style={styles.addressInfo}>
+                  <Ionicons
+                    name={
+                      selectLeveransOption.includes(item.id)
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    style={styles.icon}
+                    size={28}
+                    color="orange"
+                  />
+                  <View style={styles.addressTextArea}>
+                    <Text style={styles.adressText}>{item.streetName}</Text>
+                    <Text style={styles.adressText}>{item.zipCode}</Text>
+                    <Text style={styles.adressText}>{item.city}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+          keyExtractor={(item) => item.id}
+        />
+
         <View style={styles.checkAddress}>
           <Text style={styles.header2}>FAKTURAADRESS</Text>
         </View>
-        <View style={styles.addressInfo}>
-          <Text></Text>
-          <Text></Text>
-          <Text></Text>
-          <Text></Text>
-        </View>
+        <FlatList
+          style={styles.flatList}
+          data={faktura}
+          renderItem={({ item }) => {
+            return (
+              <TouchableOpacity
+                onPress={() => onPressSelectFakturaButton(item.id)}
+              >
+                <View
+                  style={[
+                    styles.addressInfo,
+                    {
+                      backgroundColor: styles.addressInfo ? "#F2F1F1" : "#fff",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      selectFakturaOption.includes(item.id)
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    style={styles.icon}
+                    size={28}
+                    color="orange"
+                  />
+                  <View style={styles.addressTextArea}>
+                    <Text style={styles.adressText}>{item.streetName}</Text>
+                    <Text style={styles.adressText}>{item.zipCode}</Text>
+                    <Text style={styles.adressText}>{item.city}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+          keyExtractor={(item) => item.id}
+        />
         <View>
           <TextInput
             label="Kostnadsställe"
@@ -206,12 +311,15 @@ const styles = StyleSheet.create({
   },
   picContainer: {
     margin: 20,
-    marginTop: -10,
+    marginTop: -5,
   },
   image: {
-    width: 90,
+    width: 120,
     height: 130,
     marginTop: 10,
+  },
+  textArea: {
+    margin: 10,
   },
   title: {
     fontSize: 20,
@@ -226,8 +334,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#b2b2b2",
   },
-  flatList: {
-    height: 300,
+  flatListCart: {
+    height: 400,
   },
   header2: {
     fontSize: 16,
@@ -238,6 +346,14 @@ const styles = StyleSheet.create({
   addressInfo: {
     margin: 20,
     marginTop: 5,
+    width: 300,
+    padding: 10,
+    backgroundColor: "#F2F1F1",
+    display: "flex",
+    flexDirection: "row",
+  },
+  addressTextArea: {
+    marginLeft: 20,
   },
   priceCheck: {
     width: 340,
@@ -270,5 +386,9 @@ const styles = StyleSheet.create({
     width: "80%",
     backgroundColor: "#fff",
     marginLeft: 20,
+  },
+  adressText: {
+    fontSize: 16,
+    marginBottom: 5,
   },
 });

@@ -14,6 +14,7 @@ import { useUserContext } from "../.expo/Context/userContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
 import axios from "axios";
+import { ScrollView } from "react-native-gesture-handler";
 
 const KontoScreen = (props) => {
   const navigation = useNavigation();
@@ -46,8 +47,6 @@ const KontoScreen = (props) => {
         let personInfo = res.data;
         setLoading(false);
         setPersonInfo(personInfo);
-
-        console.log(personInfo);
       });
   }, [name]);
 
@@ -74,15 +73,8 @@ const KontoScreen = (props) => {
     navigation.navigate("Order History");
   };
 
-/*   const onPressSaveAdress = (addressId) => {
-    const updatedItems = selected.includes(addressId)
-      ? selected.filter((item) => item !== addressId)
-      : [...selected, addressId];
-
-    setSelected(updatedItems);
-  }; */
-
   return (
+    <ScrollView>
     <View style={{ flex: 1 }}>
       <View style={styles.header}>
         <Image
@@ -130,15 +122,8 @@ const KontoScreen = (props) => {
                     name="pencil"
                     style={styles.icon}
                     onPress={onPressEditAdress}
-                  />
-                  {/*   <AntDesign
-                      name={selected.includes(item.id) ? "star" : "staro"}
-                      style={styles.icon}
-                      size={24}
-                      color="orange"
-                    /> */}
-                  </Pressable>
-                 
+                  />         
+                  </Pressable>     
                   <Text style={styles.addressInfo}>{item.streetName}</Text>
                   <Text style={styles.addressInfo}>{item.zipCode}</Text>
                   <Text style={styles.addressInfo}>{item.city}</Text>
@@ -192,6 +177,7 @@ const KontoScreen = (props) => {
         </Pressable>
       </View>
     </View>
+    </ScrollView>
   );
 };
 export default KontoScreen;

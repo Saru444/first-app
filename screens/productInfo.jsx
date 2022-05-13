@@ -5,11 +5,14 @@ import { ScrollView } from "react-native-gesture-handler";
 import NumericInput from "react-native-numeric-input";
 import { Alert } from "react-native";
 import { Snackbar } from "react-native-paper";
+import { useCartContext } from "../.expo/Context/cartContext";
 
 const ProductInfo = (props) => {
   const [product, setProduct] = useState({});
 
   const [isVisible, setIsVisible] = useState(false);
+
+  const { list, updateList } = useCartContext();
 
   useEffect(() => {
     const productData = props.route.params?.product || {};
@@ -32,12 +35,6 @@ const ProductInfo = (props) => {
   };
 
   const storeData = async () => {
-    const existingCart = await AsyncStorage.getItem("key");
-    let list = [];
-    if (existingCart !== null) {
-      list = JSON.parse(existingCart);
-    }
-
     const existingIndex = list.findIndex((item) => item.id === product.id);
     if (existingIndex > -1) {
       list[existingIndex].quantity += value;
@@ -51,36 +48,10 @@ const ProductInfo = (props) => {
         Price: product.price,
       });
     }
-    console.log(list);
-
-    //behöver convertera till JSON.stringfy(value)
-    const strValue = JSON.stringify(list);
-    await AsyncStorage.setItem("key", strValue);
+    updateList(list);
+    // const strValue = JSON.stringify(list);
+    // await AsyncStorage.setItem("key", strValue);
   };
-
-  // nya list för att spara info som passar backend (createOrder)
-  /*  const storeData2 = async () => {
-    const existingCart = await AsyncStorage.getItem("key2");
-    let listSaving = [];
-    if (existingCart !== null) {
-      listSaving = JSON.parse(existingCart);
-    }
-    const existingIndex = list.findIndex((item) => item.id === product.id);
-    if (existingIndex > -1) {
-      listSaving[existingIndex]. quantity += value;
-    } else {
-      listSaving.push({
-        id: product.id,
-        productId:product.id,
-        quantity:value,
-        name: product.name,
-        imgUrl: product.imageUrl,
-      });
-    }
-    const strValue = JSON.stringify(listSaving);
-    await AsyncStorage.setItem("key2", strValue);
-  };
-   */
 
   return (
     <View style={styles.infoContainer}>
@@ -102,9 +73,13 @@ const ProductInfo = (props) => {
           <NumericInput
             onChange={(value) => {
               setValue(value);
-              console.log(value);
+              /* console.log(value); */
             }}
-            minValue={0}
+          
+           value={1} 
+           minValue={1}
+            maxValue={1000} 
+            
             totalWidth={240}
             totalHeight={40}
             rounded

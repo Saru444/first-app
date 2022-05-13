@@ -9,22 +9,15 @@ import {
 import React, { useState, useEffect } from "react";
 import { MaterialCommunityIcons, FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useIsFocused } from "@react-navigation/native";
 import { SwipeListView } from "react-native-swipe-list-view";
 import { useNavigation } from "@react-navigation/native";
+import { useCartContext } from "../.expo/Context/cartContext";
 
 const CartScreen = () => {
   const navigation = useNavigation();
 
-  const isFocused = useIsFocused();
-
-  const [list, setList] = useState([]);
-
-  /*   const [listSaving,setListSaving]=useState([]); */
-
-  const [totalPrice, setTotalPrice] = useState(0);
-
-  const updateData = async () => {
+  const { list, removeData, totalPrice, cleanCart,totalAmount } = useCartContext();
+  /*  const updateData = async () => {
     const value = await AsyncStorage.getItem("key");
     let list = [];
     let totalPrice = 0;
@@ -34,31 +27,16 @@ const CartScreen = () => {
       for (var i in list) {
         totalPrice += list[i].Price * list[i].quantity;
       }
-      console.log(totalPrice);
     }
     setList(list);
     setTotalPrice(totalPrice);
-  };
+  }; */
 
-  // nya list för att spara info som passar backend (createOrder)
-  /*   const updateData2 = async () => {
-    const value = await AsyncStorage.getItem("key2");
-    let listSaving = [];
-    console.log(value);
-    if (value !== null) {
-      listSaving = JSON.parse(value);
-    }
-    setListSaving(listSaving)
-    console.log(listSaving);
-  };
- */
-  useEffect(() => {
-    if (isFocused) {
-      updateData();
-    }
-  }, [isFocused]);
+  /*    useEffect(() => {  
+     removeData(id);
+   }, []); */
 
-  const removeData = async (id) => {
+  /*  const removeData = async (id) => {
     const rawData = await AsyncStorage.getItem("key");
     if (rawData === null) return;
 
@@ -69,7 +47,7 @@ const CartScreen = () => {
     await AsyncStorage.setItem("key", updatedString);
 
     updateData();
-  };
+  }; */
 
   const onPressCheckout = () => {
     navigation.navigate("Kassa");
@@ -84,12 +62,13 @@ const CartScreen = () => {
       <SwipeListView
         contentContainerStyle={styles.flatList}
         data={list}
+        extraData={list}
         renderItem={({ item }, rowMap) => (
           <View style={styles.cartInfo}>
             <View style={styles.picContainer}>
-              <Image style={styles.image} source={{ uri: item.imgUrl}} />
+              <Image style={styles.image} source={{ uri: item.imgUrl }} />
             </View>
-            <View>
+            <View style={styles.textArea}>
               <Text style={styles.title}>{item.name}</Text>
               <Text style={styles.smallText}>
                 {item.Price * item.quantity} kr
@@ -174,12 +153,15 @@ const styles = StyleSheet.create({
   },
   picContainer: {
     margin: 20,
-    marginTop: -10,
+    marginTop: -5,
   },
   image: {
-    width: 90,
+    width: 120,
     height: 130,
     marginTop: 10,
+  },
+  textArea: {
+    margin: 10,
   },
   title: {
     fontSize: 20,

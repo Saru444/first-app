@@ -3,13 +3,16 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import React from "react";
 import { StyleSheet } from "react-native";
-import CartScreen from "./cart";
+import CartRouter from "./cartRouter";
 import ProductRouter from "./productRouter";
 import UserInfoRouter from "./userInfoRouter";
+import { useCartContext } from "../.expo/Context/cartContext";
 
 const Tab = createBottomTabNavigator();
 
 const AppRouter = () => {
+  const { totalAmount } = useCartContext();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -32,6 +35,22 @@ const AppRouter = () => {
         }}
       />
       <Tab.Screen
+        name="CartRouter"
+        component={CartRouter}
+        options={{
+          headerShown: false,
+          tabBarActiveTintColor: "orange",
+          tabBarBadge: totalAmount > 0 ? totalAmount : null,
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              size={28}
+              color={color}
+              name={focused ? "cart" : "cart-outline"}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="UserInfoRouter"
         component={UserInfoRouter}
         options={{
@@ -42,20 +61,6 @@ const AppRouter = () => {
               size={28}
               color={color}
               name={focused ? "person-circle" : "person-circle-outline"}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Varukorg"
-        component={CartScreen}
-        options={{
-          tabBarActiveTintColor: "orange",
-          tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons
-              size={28}
-              color={color}
-              name={focused ? "cart" : "cart-outline"}
             />
           ),
         }}

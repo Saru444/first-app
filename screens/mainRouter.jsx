@@ -20,6 +20,7 @@ const MainRouter = () => {
     );
 
   return (
+    
     <Stack.Navigator initialRouteName="home">
       {user !== null ? (
         <Stack.Screen name="home" component={AppRouter}  options={{ headerShown: false }} />
