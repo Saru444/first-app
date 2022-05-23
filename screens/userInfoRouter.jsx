@@ -7,13 +7,18 @@ import OrderHistory from "./orderHistory";
 import EditAddress from "./editAddress";
 import OrderConfirmation from "./orderConfirmation"; 
 import OrderDetail from './orderDetail';
+import { useTranslation } from "react-i18next";
+
+
 
 const Stack = createStackNavigator();
 
 const UserInfoRouter = () => {
+
+  const {t,i18n} =useTranslation();
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Ditt konto" component={KontoScreen} />
+      <Stack.Screen name="Ditt konto" options={{title:t("Ditt konto")}} component={KontoScreen} />
       <Stack.Screen name="Användaruppgifter" component={EditUserInfo} />
       <Stack.Screen name="Add Adress" component={AddNewAdress} />
       <Stack.Screen name="ÄNDRA LÖSENORD" component={ChangePwd} />

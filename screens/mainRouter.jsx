@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { StyleSheet,View,Text } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useUserContext } from "../.expo/Context/userContext";
+import AppLoad from "./appLoad";
 import AppRouter from "./appRouter";
 import LoginRouter from "./loginRouter";
 
@@ -13,10 +14,7 @@ const MainRouter = () => {
 
   if (loading)
     return (
-      <View>
-        <Text>Loading</Text>
-        <ActivityIndicator />
-      </View>
+      <AppLoad />
     );
 
   return (

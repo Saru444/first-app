@@ -1,18 +1,34 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, FlatList } from "react-native";
-/* import DropDownPicker from "react-native-dropdown-picker"; */
-/* import { Picker } from "@react-native-picker/picker"; */
+import { StyleSheet, Text, View, FlatList, Button } from "react-native";
 import ProductItem from "../Components/ProductItem";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Dropdown from '../Components/dropdown';
+import Dropdown from "../Components/dropdown";
+import { Searchbar } from "react-native-paper";
+import { useTranslation } from "react-i18next";
+import SwitchSelector from 'react-native-switch-selector';
 
 const Products = (props) => {
+  const {t,i18n} = useTranslation();
+
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [products, setProducts] = useState([]);
   const [queriedProducts, setQueriedProducts] = useState([]);
   const [id, setId] = useState("");
+  // dropdown data
+  const [selected, setSelected] = useState(undefined);
+  const data = [
+    { label: t("Alla"), value: "1" },
+    { label: t("Kläder"), value: "2" },
+    { label: t("KontorsMaterial"), value: "3" },
+  ];
 
-
+  const options=[
+    { label: t("Engelska"), value: "en" },
+    { label: t("kinesiska"), value: "cn" },
+    { label: t("Svenska"), value: "sv" },
+  ];
   const getData = async () => {
     const userId = await AsyncStorage.getItem("userId");
     let id = "";
@@ -39,42 +55,52 @@ const Products = (props) => {
       .catch((reason) => {});
   }, [id]);
 
- 
-  const [selected, setSelected] = useState(undefined);
-  const data = [
-    { label: "All", value: "1" },
-    { label: "Kläder", value: "2" },
-    { label: "KontorsMaterial", value: "3" },
-  ];
-
   useEffect(() => {
     if (selected === undefined) {
       setQueriedProducts(products);
-    }
-    else if(selected.label==="All"){
+    } else if (selected.label === "All") {
       setQueriedProducts(products);
+    } else {
+      setQueriedProducts(
+        products.filter((product) => product.mainCategory === selected.label)
+      );
     }
-    else {
-      setQueriedProducts(products.filter((product) => product.mainCategory === selected.label));
-    }
-  }, [selected])
+  }, [selected]);
+
+  const searchFun = (query) => {
+    setSearchQuery(query);
+  };
 
   return (
     <View style={styles.container}>
-     {/*  <Picker
-        selectedValue={selectedCategory}
-        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-      >
-        <Picker.Item label="T-Shirt" value="ts" />
-        <Picker.Item label="Väskor" value="vs" />
-        <Picker.Item label="pennor" value="penna" />
-        <Picker.Item label="Mässa" value="ms" />
-        <Picker.Item label="Träning" value="tg" />
-        <Picker.Item label="Presenter" value="gift" />
-      </Picker> */}
-      <Dropdown label="Category" data={data} onSelect={setSelected} />
+      <View style={styles.language}>
+       <SwitchSelector 
+       options={options} 
+       hasPadding initial={0} 
+       onPress={(language)=>{i18n.changeLanguage(language)}} 
+       buttonColor={"orange"}
+        
+        />
+      </View>
+      <Searchbar
+        placeholder={t("Vad letar du efter?")}
+        onChangeText={(query) => searchFun(query)}
+        value={searchQuery}
+        style={styles.search}
+      />
+      <Dropdown label={t("Category")} data={data} onSelect={setSelected} />
       <FlatList
-        data={queriedProducts}
+        data={
+          products.filter((item) => {
+            const itemData = `
+            ${item.name.toUpperCase()}
+            ${item.ean.toUpperCase()}
+            `;
+            const queryData = searchQuery.toUpperCase();
+            return itemData.indexOf(queryData) > -1;
+          })
+          /*   .filter((item) => item.mainCategory===selected.label)  */
+        }
         numColumns={2}
         renderItem={({ item }) => <ProductItem data={item} />}
         keyExtractor={(item) => item.id}
@@ -88,5 +114,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  search: {
+    marginTop: 40,
+  },
+  language: {
+    width: 375,
+    marginTop:50,
   },
 });

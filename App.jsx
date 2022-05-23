@@ -7,7 +7,7 @@ import MainRouter from "./screens/mainRouter";
 import { UserContextProvider } from "./.expo/Context/userContext";
 import { CartContextProvider } from "./.expo/Context/cartContext";
 import { LogBox } from "react-native";
-import SideRouter from "./screens/sideRouter";
+import i18n from './.expo/language/i18n';
 
 const App = () => {
   useEffect(() => {

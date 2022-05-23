@@ -12,23 +12,26 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useUserContext } from "../.expo/Context/userContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign } from "@expo/vector-icons";
 import axios from "axios";
 import { ScrollView } from "react-native-gesture-handler";
+import AppLoad from "./appLoad";
+import { useTranslation } from "react-i18next";
+/* import { useUserInfoContext } from "../.expo/Context/"; */
 
 const KontoScreen = (props) => {
+  const {t,i18n} =useTranslation();
   const navigation = useNavigation();
   const { signOut } = useUserContext();
   const [personInfo, setPersonInfo] = useState({ addresses: [] });
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState(""); 
+  const [loading, setLoading] = useState(false);
 
   const [selected, setSelected] = useState([]);
 
   const [isSelected, setSelection] = useState(true);
   const [isOn, setOption] = useState(false);
 
-  const getData = async () => {
+   const getData = async () => {
     const userName = await AsyncStorage.getItem("userkey");
     let name = "";
     if (userName !== null) {
@@ -45,10 +48,10 @@ const KontoScreen = (props) => {
       .get(`https://94f6-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
       .then((res) => {
         let personInfo = res.data;
-        setLoading(false);
-        setPersonInfo(personInfo);
+        setPersonInfo(personInfo);   
       });
-  }, [name]);
+  }, [name]); 
+ 
 
   const onPressEdit = () => {
     navigation.navigate("Användaruppgifter");
@@ -93,11 +96,11 @@ const KontoScreen = (props) => {
         <Text style={styles.email}>{personInfo.email}</Text>
 
         <Pressable onPress={onPressChangePwd}>
-          <Text style={styles.changePwd}>ÄNDRA LÖSENORD</Text>
+          <Text style={styles.changePwd}>{t("ÄNDRA LÖSENORD")}</Text>
         </Pressable>
       </View>
       <View style={styles.section1}>
-        <Text style={styles.text}>ADRESSER</Text>
+        <Text style={styles.text}>{t("ADRESSER")}</Text>
         <Ionicons
           size={32}
           color="orange"
@@ -161,7 +164,7 @@ const KontoScreen = (props) => {
           },
         ]}
       >
-        <Text style={styles.order}>Beställningar och returer</Text>
+        <Text style={styles.order}>{t("Beställningar och returer")}</Text>
       </Pressable>
       <View style={{ flex: 1 }}></View>
       <View>
@@ -173,7 +176,7 @@ const KontoScreen = (props) => {
             },
           ]}
         >
-          <Text style={styles.loggaUt}>LOGGA UT</Text>
+          <Text style={styles.loggaUt}>{t("LOGGA UT")}</Text>
         </Pressable>
       </View>
     </View>

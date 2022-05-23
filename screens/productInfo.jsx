@@ -6,13 +6,29 @@ import NumericInput from "react-native-numeric-input";
 import { Alert } from "react-native";
 import { Snackbar } from "react-native-paper";
 import { useCartContext } from "../.expo/Context/cartContext";
+import DropDownSize from '../Components/dropDownSize';
+import { useTranslation } from "react-i18next";
 
 const ProductInfo = (props) => {
+  const {t,i18n} = useTranslation();
   const [product, setProduct] = useState({});
 
   const [isVisible, setIsVisible] = useState(false);
 
   const { list, updateList } = useCartContext();
+
+  const [selected, setSelected] = useState(undefined);
+  const [submitted, setSubmitted] = useState(false);
+  const [value, setValue] = useState(0);
+  const [size,setSize]=useState("");
+
+  const data = [
+   /*  { label: "Välj storlek", value: "1" }, */
+    { label: t("S"), value: "1" },
+    { label: t("M"), value: "2" },
+    { label: t("L"), value: "3" },
+    { label: t("XL"), value: "4" },
+  ];
 
   useEffect(() => {
     const productData = props.route.params?.product || {};
@@ -22,8 +38,7 @@ const ProductInfo = (props) => {
     });
   });
 
-  const [submitted, setSubmitted] = useState(false);
-  const [value, setValue] = useState(0);
+
   const onPressHandla = () => {
     if (value > 0) {
       setSubmitted(!submitted);
@@ -35,7 +50,10 @@ const ProductInfo = (props) => {
   };
 
   const storeData = async () => {
-    const existingIndex = list.findIndex((item) => item.id === product.id);
+    let size="";
+    size=selected.label;
+    setSize(size);
+    const existingIndex = list.findIndex((item) => item.id === product.id&&item.size===size);
     if (existingIndex > -1) {
       list[existingIndex].quantity += value;
     } else {
@@ -45,10 +63,12 @@ const ProductInfo = (props) => {
         imgUrl: product.imageUrl,
         name: product.name,
         quantity: value,
+        size:size,
         Price: product.price,
       });
     }
     updateList(list);
+    console.log(list);
     // const strValue = JSON.stringify(list);
     // await AsyncStorage.setItem("key", strValue);
   };
@@ -62,8 +82,9 @@ const ProductInfo = (props) => {
         ></Image>
         <Text style={styles.text}>{product.name}</Text>
         <Text style={styles.productInfo}>{product.description}</Text>
-        <Text style={styles.price}>Pris: {product.price} kr</Text>
-        <Text style={styles.total}>Antal:</Text>
+        <Text style={styles.price}>{t('Pris')}: {product.price} {t('kr')}</Text>
+        <DropDownSize label="Välj storlek" data={data} onSelect={setSelected} />
+        <Text style={styles.total}>{t('Antal')}:</Text>
         <View
           style={{
             alignItems: "center",
@@ -73,17 +94,13 @@ const ProductInfo = (props) => {
           <NumericInput
             onChange={(value) => {
               setValue(value);
-              /* console.log(value); */
-            }}
-          
-           value={1} 
-           minValue={1}
-            maxValue={1000} 
-            
+            }}        
+           value={0}
             totalWidth={240}
             totalHeight={40}
             rounded
           />
+          
         </View>
         <Pressable
           onPress={onPressHandla}
@@ -93,7 +110,7 @@ const ProductInfo = (props) => {
             },
           ]}
         >
-          <Text style={styles.handla}>Handla</Text>
+          <Text style={styles.handla}>{t('Handla')}</Text>
         </Pressable>
         <Snackbar
           style={styles.snackbar}
@@ -101,7 +118,7 @@ const ProductInfo = (props) => {
           onDismiss={() => setIsVisible(false)}
           duration={1000}
         >
-          Lagd i Varukorgen!
+          {t("Lagd i Varukorgen!")}
         </Snackbar>
       </ScrollView>
     </View>

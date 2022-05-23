@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
 const ProductItem = (props) => {
   const navigation = useNavigation();
+  const {t,i18n} =useTranslation();
 
   const onItemPressed = () => {
     navigation.navigate("productInfo", { product: props.data });
@@ -28,7 +30,7 @@ const ProductItem = (props) => {
         <Text numberOfLines={1} ellipsizeMode="tail" style={styles.description}>
           {props.data.description}
         </Text>
-        <Text style={styles.price}>Pris: {props.data.price} kr</Text>
+        <Text style={styles.price}>{t('Pris')}: {props.data.price} {t('kr')}</Text>
       </View>
     </TouchableOpacity>
   );

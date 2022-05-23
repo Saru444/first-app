@@ -1,18 +1,35 @@
 import { StyleSheet, View, Pressable, Image } from "react-native";
-import React, { useState,} from "react";
+import React, { useState } from "react";
 import { TextInput, Text } from "react-native-paper";
 import { useUserContext } from "../.expo/Context/userContext";
+import AppLoad from "./appLoad";
+import { useTranslation } from "react-i18next";
+ 
+
+
+
+ 
 
 const Login = () => {
+  const {t,i18n} =useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const {signIn} = useUserContext()
+  const { signIn } = useUserContext();
 
-  const onPressLogin = () => {
-    //Login on server
-    signIn(username,password)
+  const onPressLogin = async () => {
+    try {
+      setLoading(true);
+      //Login on server
+      await signIn(username, password);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
   };
+
+  if (loading) return <AppLoad />;
 
   return (
     <View style={styles.body}>
@@ -23,7 +40,7 @@ const Login = () => {
       />
       <View style={styles.container}>
         <TextInput
-          label="Användarnamn"
+          label={t("Användarnamn")}
           value={username}
           style={styles.input}
           mode="flat"
@@ -31,7 +48,7 @@ const Login = () => {
           activeUnderlineColor="orange"
         />
         <TextInput
-          label="Lösenord"
+          label={t("Lösenord")}
           value={password}
           style={styles.input}
           mode="flat"
@@ -49,9 +66,10 @@ const Login = () => {
             },
           ]}
         >
-          <Text style={styles.login}>Logga in</Text>
+          <Text style={styles.login}>{t("Logga in")}</Text>
         </Pressable>
       </View>
+      {loading && <AppLoad />}
     </View>
   );
 };

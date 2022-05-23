@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { StyleSheet, View, Text, ScrollView, FlatList } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 const OrderDetail = ({ route, navigation }) => {
+  const {t,i18n} =useTranslation();
   const [personInfo, setPersonInfo] = useState({ addresses: [] });
   const [name, setName] = useState("");
   const [leverans, setLeverans] = useState([]);
@@ -48,7 +50,7 @@ const OrderDetail = ({ route, navigation }) => {
 
   return (
     <View style={styles.bigContainer}>
-      <Text style={styles.bigText}>Order ID: </Text>
+      <Text style={styles.bigText}>{t("Ordernummer")}: </Text>
       <Text style={styles.text}>{route.params.order.id}</Text>
 
       <FlatList

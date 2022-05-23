@@ -17,24 +17,30 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { log } from "react-native-reanimated";
 import { useCartContext } from "../.expo/Context/cartContext";
+import SendLoad from "../Components/sendLoad";
+import { useTranslation } from "react-i18next";
 
 const CheckOut = () => {
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
 
   const [personInfo, setPersonInfo] = useState({ addresses: [] });
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
   const [leverans, setLeverans] = useState([]);
   const [faktura, setFaktura] = useState([]);
   const [message, setMessage] = useState("");
   const [cost, setCost] = useState("");
-
   const [selectLeveransOption, setSelectLeveransOption] = useState("");
   const [selectFakturaOption, setSelectFakturaOption] = useState("");
-
   const [adressID, setAdressID] = useState("");
   const [delivaryAdressID, setDelivaryAdressID] = useState("");
-  const { list, totalPrice, cleanCart } = useCartContext();
+  const [qr, setQr] = useState("");
+  const [discountPrice, setDiscountPrice] = useState(0);
 
+  const { list, totalPrice, cleanCart, coupon, cleanCoupon } = useCartContext();
+
+  console.log(coupon);
   /// Leverans
   const onPressSelectLeveransButton = (addressId) => {
     const updatedItems = selectLeveransOption.includes(addressId)
@@ -66,6 +72,10 @@ const CheckOut = () => {
     getData();
   }, []);
 
+  const onPressScan = () => {
+    navigation.navigate("Scan");
+  };
+
   useEffect(() => {
     if (name === "") return;
     axios
@@ -86,6 +96,22 @@ const CheckOut = () => {
       });
   }, [name]);
 
+  useEffect(() => {
+    if (coupon === "") return;
+    let discountPrice = 0;
+    if (coupon === "SOMMARREA10") {
+      discountPrice = totalPrice * 0.9;
+    }
+    setDiscountPrice(((discountPrice * 100) / 100).toFixed(2));
+    console.log(discountPrice);
+  }, [coupon]);
+
+  const onPressDelete=()=>{
+    cleanCoupon();
+    navigation.navigate("Varukorg");
+   
+  }
+
   const onPressCheck = async () => {
     console.log("adressID:", adressID);
     let activeAddress = {};
@@ -103,8 +129,8 @@ const CheckOut = () => {
         break;
       }
     }
-    console.log("activeDeliveryAddress:", activeDeliveryAddress);
-
+    /*  console.log("activeDeliveryAddress:", activeDeliveryAddress); */
+    setLoading(true);
     const check = await fetch(
       "https://94f6-81-226-206-31.eu.ngrok.io/api/Order/createorder",
       {
@@ -121,167 +147,416 @@ const CheckOut = () => {
           message: message,
           costCenter: cost,
           status: "",
-        }),       
-      }    
+        }),
+      }
     );
+
     console.log(check.status);
 
-    console.log(activeAddress, activeDeliveryAddress)
-    if (delivaryAdressID==="" || adressID==="") {
+    /*   console.log(activeAddress, activeDeliveryAddress) */
+    if (delivaryAdressID === "" || adressID === "") {
       Alert.alert("warning", "Du måste välja leverans/faktura address!", [
         { text: "ok" },
       ]);
-      setSelectLeveransOption(""); 
+      setSelectLeveransOption("");
       setSelectFakturaOption("");
       return;
     }
     if (check.status == 200) {
-      navigation.navigate("klart");
-      cleanCart();
+      setTimeout(() => {
+        navigation.navigate("klart");
+      }, 2000);
+      setTimeout(() => {
+        cleanCart();
+      }, 2000);
       return;
     } else {
       Alert.alert("warning", "something is wrong!", [{ text: "ok" }]);
       return;
     }
   };
-  return (
-    <ScrollView>
-      <View style={styles.bigContainer}>
-        <View style={styles.container}>
-          <Text style={styles.header}>BESTÄLLNING</Text>
-        </View>
-        <FlatList
-          style={styles.flatListCart}
-          data={list}
-          renderItem={({ item }) => (
-            <View style={styles.cartInfo}>
-              <View style={styles.picContainer}>
-                <Image style={styles.image} source={{ uri: item.imgUrl }} />
-              </View>
-              <View style={styles.textArea}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.smallText}>
-                  {item.Price * item.quantity} kr
-                </Text>
-                <Text style={styles.smallText}>Antal: {item.quantity}</Text>
-              </View>
-            </View>
-          )}
-          keyExtractor={(item) => item.id}
-        />
-        <View style={styles.checkAddress}>
-          <Text style={styles.header2}>PAKETET SKICKAS TILL</Text>
-        </View>
-        <FlatList
-          style={styles.flatList}
-          data={leverans}
-          renderItem={({ item }) => {
-            return (
-              <TouchableOpacity
-                onPress={() => onPressSelectLeveransButton(item.id)}
-                style={({ press }) => [
-                  {
-                    backgroundColor: press ? "orange" : "red",
-                  },
-                ]}
-              >
-                <View style={styles.addressInfo}>
-                  <Ionicons
-                    name={
-                      selectLeveransOption.includes(item.id)
-                        ? "radio-button-on"
-                        : "radio-button-off"
-                    }
-                    style={styles.icon}
-                    size={28}
-                    color="orange"
-                  />
-                  <View style={styles.addressTextArea}>
-                    <Text style={styles.adressText}>{item.streetName}</Text>
-                    <Text style={styles.adressText}>{item.zipCode}</Text>
-                    <Text style={styles.adressText}>{item.city}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-          keyExtractor={(item) => item.id}
-        />
+  if (loading) return <SendLoad />;
 
-        <View style={styles.checkAddress}>
-          <Text style={styles.header2}>FAKTURAADRESS</Text>
-        </View>
-        <FlatList
-          style={styles.flatList}
-          data={faktura}
-          renderItem={({ item }) => {
-            return (
-              <TouchableOpacity
-                onPress={() => onPressSelectFakturaButton(item.id)}
-              >
-                <View
-                  style={[
-                    styles.addressInfo,
+  // om user använda coupon
+  const showDiscountPrice = () => {
+    return (
+      <ScrollView>
+        <View style={styles.bigContainer}>
+          <View style={styles.container}>
+            <Text style={styles.header}>{t("BESTÄLLNING")}</Text>
+          </View>
+          <FlatList
+            style={styles.flatListCart}
+            data={list}
+            renderItem={({ item }) => (
+              <View style={styles.cartInfo}>
+                <View style={styles.picContainer}>
+                  <Image style={styles.image} source={{ uri: item.imgUrl }} />
+                </View>
+                <View style={styles.textArea}>
+                  <Text style={styles.title}>{item.name}</Text>
+                  <Text style={styles.smallText}>
+                    {item.Price * item.quantity} {t("kr")}
+                  </Text>
+                  <Text style={styles.smallText}>
+                    {t("Storlek")}: {item.size}
+                  </Text>
+                  <Text style={styles.smallText}>
+                    {t("Antal")}: {item.quantity}
+                  </Text>
+                </View>
+              </View>
+            )}
+            keyExtractor={(item) => `${item.id}${item.size}`}
+          />
+          <View style={styles.checkAddress}>
+            <Text style={styles.header2}>{t("PAKETET SKICKAS TILL")}</Text>
+          </View>
+          <FlatList
+            style={styles.flatList}
+            data={leverans}
+            renderItem={({ item }) => {
+              return (
+                <TouchableOpacity
+                  onPress={() => onPressSelectLeveransButton(item.id)}
+                  style={({ press }) => [
                     {
-                      backgroundColor: styles.addressInfo ? "#F2F1F1" : "#fff",
+                      backgroundColor: press ? "orange" : "red",
                     },
                   ]}
                 >
-                  <Ionicons
-                    name={
-                      selectFakturaOption.includes(item.id)
-                        ? "radio-button-on"
-                        : "radio-button-off"
-                    }
-                    style={styles.icon}
-                    size={28}
-                    color="orange"
-                  />
-                  <View style={styles.addressTextArea}>
-                    <Text style={styles.adressText}>{item.streetName}</Text>
-                    <Text style={styles.adressText}>{item.zipCode}</Text>
-                    <Text style={styles.adressText}>{item.city}</Text>
+                  <View style={styles.addressInfo}>
+                    <Ionicons
+                      name={
+                        selectLeveransOption.includes(item.id)
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      style={styles.icon}
+                      size={28}
+                      color="orange"
+                    />
+                    <View style={styles.addressTextArea}>
+                      <Text style={styles.adressText}>{item.streetName}</Text>
+                      <Text style={styles.adressText}>{item.zipCode}</Text>
+                      <Text style={styles.adressText}>{item.city}</Text>
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-          keyExtractor={(item) => item.id}
-        />
-        <View>
-          <TextInput
-            label="Kostnadsställe"
-            style={styles.input}
-            mode="flat"
-            onChangeText={(value) => setCost(value)}
-            activeUnderlineColor="orange"
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={(item) => item.id}
           />
+
+          <View style={styles.checkAddress}>
+            <Text style={styles.header2}>{t("FAKTURAADRESS")}</Text>
+          </View>
+          <FlatList
+            style={styles.flatList}
+            data={faktura}
+            renderItem={({ item }) => {
+              return (
+                <TouchableOpacity
+                  onPress={() => onPressSelectFakturaButton(item.id)}
+                >
+                  <View
+                    style={[
+                      styles.addressInfo,
+                      {
+                        backgroundColor: styles.addressInfo
+                          ? "#F2F1F1"
+                          : "#fff",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        selectFakturaOption.includes(item.id)
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      style={styles.icon}
+                      size={28}
+                      color="orange"
+                    />
+                    <View style={styles.addressTextArea}>
+                      <Text style={styles.adressText}>{item.streetName}</Text>
+                      <Text style={styles.adressText}>{item.zipCode}</Text>
+                      <Text style={styles.adressText}>{item.city}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={(item) => item.id}
+          />
+          <View>
+            <TextInput
+              label="Kostnadsställe"
+              style={styles.input}
+              mode="flat"
+              onChangeText={(value) => setCost(value)}
+              activeUnderlineColor="orange"
+            />
+            <TextInput
+              label="Meddelande"
+              style={styles.input}
+              mode="flat"
+              onChangeText={(value) => setMessage(value)}
+              activeUnderlineColor="orange"
+            />
+          </View>
+          <View style={styles.rabatt}>
+            <Text style={styles.header2}> RABATTKOD ELLER PRESENTKORT</Text>
+          </View>
           <TextInput
-            label="Meddelande"
+            label="Lös in kod"
             style={styles.input}
-            mode="flat"
+            mode="outlined"
             onChangeText={(value) => setMessage(value)}
-            activeUnderlineColor="orange"
+            activeOutlineColor="orange"
           />
-        </View>
-        <View style={styles.priceCheck}>
-          <Text style={styles.price}>TOTALBELOPP</Text>
-          <Text style={styles.price}>{totalPrice} kr</Text>
           <Pressable
-            onPress={onPressCheck}
+            onPress={onPressScan}
             style={({ pressed }) => [
               {
-                backgroundColor: pressed ? "#b2b2b2" : "orange",
+                backgroundColor: pressed ? "#b2b2b2" : "#AAA5A5",
                 margin: 30,
-                marginTop: 20,
+                marginTop: 15,
+                marginLeft: 20,
+                padding: 5,
+                width: 300,
               },
             ]}
           >
-            <Text style={styles.send}>SKICKA BESTÄLLNING</Text>
+            <Text style={styles.qr}>Scan Qrkod</Text>
           </Pressable>
+          <Pressable
+            onPress={onPressDelete}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed ? "#b2b2b2" : "#AAA5A5",
+                margin: 30,
+                marginTop: 15,
+                marginLeft: 20,
+                padding: 5,
+                width: 300,
+              },
+            ]}
+          >
+            <Text style={styles.qr}>Ta bort rabbat</Text>
+          </Pressable>
+          <View style={styles.priceCheck}>
+            <Text style={styles.price}>{t("TOTALBELOPP")}</Text>
+            <Text style={styles.price}>
+              {totalPrice} {t("kr")}
+            </Text>
+            <Text style={styles.discountprice}>RABBATPRIS</Text>
+            <Text style={styles.discountprice}>
+              {discountPrice} {t("kr")}
+            </Text>
+            <Pressable
+              onPress={onPressCheck}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed ? "#b2b2b2" : "orange",
+                  margin: 30,
+                  marginTop: 20,
+                },
+              ]}
+            >
+              <Text style={styles.send}>{t("SKICKA BESTÄLLNING")}</Text>
+            </Pressable>
+          </View>
+          {loading && <SendLoad />}
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    );
+  };
+
+  const showNoDiscount = () => {
+    return (
+      <ScrollView>
+        <View style={styles.bigContainer}>
+          <View style={styles.container}>
+            <Text style={styles.header}>{t("BESTÄLLNING")}</Text>
+          </View>
+          <FlatList
+            style={styles.flatListCart}
+            data={list}
+            renderItem={({ item }) => (
+              <View style={styles.cartInfo}>
+                <View style={styles.picContainer}>
+                  <Image style={styles.image} source={{ uri: item.imgUrl }} />
+                </View>
+                <View style={styles.textArea}>
+                  <Text style={styles.title}>{item.name}</Text>
+                  <Text style={styles.smallText}>
+                    {item.Price * item.quantity} {t("kr")}
+                  </Text>
+                  <Text style={styles.smallText}>
+                    {t("Storlek")}: {item.size}
+                  </Text>
+                  <Text style={styles.smallText}>
+                    {t("Antal")}: {item.quantity}
+                  </Text>
+                </View>
+              </View>
+            )}
+            keyExtractor={(item) => `${item.id}${item.size}`}
+          />
+          <View style={styles.checkAddress}>
+            <Text style={styles.header2}>{t("PAKETET SKICKAS TILL")}</Text>
+          </View>
+          <FlatList
+            style={styles.flatList}
+            data={leverans}
+            renderItem={({ item }) => {
+              return (
+                <TouchableOpacity
+                  onPress={() => onPressSelectLeveransButton(item.id)}
+                  style={({ press }) => [
+                    {
+                      backgroundColor: press ? "orange" : "red",
+                    },
+                  ]}
+                >
+                  <View style={styles.addressInfo}>
+                    <Ionicons
+                      name={
+                        selectLeveransOption.includes(item.id)
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      style={styles.icon}
+                      size={28}
+                      color="orange"
+                    />
+                    <View style={styles.addressTextArea}>
+                      <Text style={styles.adressText}>{item.streetName}</Text>
+                      <Text style={styles.adressText}>{item.zipCode}</Text>
+                      <Text style={styles.adressText}>{item.city}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={(item) => item.id}
+          />
+
+          <View style={styles.checkAddress}>
+            <Text style={styles.header2}>{t("FAKTURAADRESS")}</Text>
+          </View>
+          <FlatList
+            style={styles.flatList}
+            data={faktura}
+            renderItem={({ item }) => {
+              return (
+                <TouchableOpacity
+                  onPress={() => onPressSelectFakturaButton(item.id)}
+                >
+                  <View
+                    style={[
+                      styles.addressInfo,
+                      {
+                        backgroundColor: styles.addressInfo
+                          ? "#F2F1F1"
+                          : "#fff",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        selectFakturaOption.includes(item.id)
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      style={styles.icon}
+                      size={28}
+                      color="orange"
+                    />
+                    <View style={styles.addressTextArea}>
+                      <Text style={styles.adressText}>{item.streetName}</Text>
+                      <Text style={styles.adressText}>{item.zipCode}</Text>
+                      <Text style={styles.adressText}>{item.city}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={(item) => item.id}
+          />
+          <View>
+            <TextInput
+              label="Kostnadsställe"
+              style={styles.input}
+              mode="flat"
+              onChangeText={(value) => setCost(value)}
+              activeUnderlineColor="orange"
+            />
+            <TextInput
+              label="Meddelande"
+              style={styles.input}
+              mode="flat"
+              onChangeText={(value) => setMessage(value)}
+              activeUnderlineColor="orange"
+            />
+          </View>
+          <View style={styles.rabatt}>
+            <Text style={styles.header2}> RABATTKOD ELLER PRESENTKORT</Text>
+          </View>
+          <TextInput
+            label="Lös in kod"
+            style={styles.input}
+            mode="outlined"
+            onChangeText={(value) => setMessage(value)}
+            activeOutlineColor="orange"
+          />
+          <Pressable
+            onPress={onPressScan}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed ? "#b2b2b2" : "#AAA5A5",
+                margin: 30,
+                marginTop: 15,
+                marginLeft: 20,
+                padding: 5,
+                width: 300,
+              },
+            ]}
+          >
+            <Text style={styles.qr}>Scan Qrkod</Text>
+          </Pressable>
+          <View style={styles.priceCheck}>
+            <Text style={styles.price}>{t("TOTALBELOPP")}</Text>
+            <Text style={styles.price}>
+              {totalPrice} {t("kr")}
+            </Text>
+            <Pressable
+              onPress={onPressCheck}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed ? "#b2b2b2" : "orange",
+                  margin: 30,
+                  marginTop: 20,
+                },
+              ]}
+            >
+              <Text style={styles.send}>{t("SKICKA BESTÄLLNING")}</Text>
+            </Pressable>
+          </View>
+          {loading && <SendLoad />}
+        </View>
+      </ScrollView>
+    );
+  };
+
+  return (
+    <View>
+      {coupon !== null && discountPrice !== 0
+        ? showDiscountPrice()
+        : showNoDiscount()}
+    </View>
   );
 };
 export default CheckOut;
@@ -357,9 +632,9 @@ const styles = StyleSheet.create({
   },
   priceCheck: {
     width: 340,
-    height: 130,
+    height: 180,
     backgroundColor: "#DCDCDC",
-    marginTop: 30,
+    marginTop: 20,
     marginBottom: 20,
     margin: 10,
     alignSelf: "center",
@@ -390,5 +665,24 @@ const styles = StyleSheet.create({
   adressText: {
     fontSize: 16,
     marginBottom: 5,
+  },
+  rabatt: {
+    margin: 5,
+    borderBottomWidth: 1,
+    borderColor: "#b2b2b2",
+  },
+  qr: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+    height: 40,
+    textAlign: "center",
+    lineHeight: 40,
+  },
+  discountprice: {
+    color: "red",
+    fontSize: 18,
+    fontWeight: "bold",
+    margin: 15,
   },
 });

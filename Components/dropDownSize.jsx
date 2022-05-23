@@ -7,11 +7,10 @@ import {
   Modal,
   View,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Octicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
-const Dropdown = ({ label, data, onSelect }) => {
+const DropDownSize = ({ label, data, onSelect }) => {
   const DropdownButton = useRef();
 
   const [visible, setVisible] = useState(false);
@@ -30,7 +29,6 @@ const Dropdown = ({ label, data, onSelect }) => {
   useEffect(() => {
     getData();
   }, []);
-
 
   const useDropdown = () => {
     visible ? setVisible(false) : openDropdown();
@@ -80,27 +78,28 @@ const Dropdown = ({ label, data, onSelect }) => {
       <Text style={styles.buttonText}>
         {(!!selected && selected.label) || label}
       </Text>
-      <MaterialCommunityIcons
-        name="chevron-down-circle"
-        size={22}
+      <Octicons
+        name="chevron-down"
+        size={24}
         color="black"
-        style={{ paddingHorizontal: 10 }}
+        style={{ paddingHorizontal: 50 }}
       />
     </TouchableOpacity>
   );
 };
-export default Dropdown;
+export default DropDownSize;
 const styles = StyleSheet.create({
   button: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#efefef",
-    width: 200,
+    backgroundColor: "#fff",
+    width: 250,
     height: 50,
-    marginLeft: 173,
-    marginTop: 10,
-    marginBottom:10,
-    borderRadius: 20,
+    margin: 20,
+    marginLeft:60,
+    borderWidth: 1,
+   borderColor:"#DEDBDB",
+   borderRadius: 10,
   },
   buttonText: {
     flex: 1,
@@ -110,8 +109,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     backgroundColor: "#fff",
-    width: "65%",
-    marginLeft: 130,
+    width: "100%",
     borderRadius: 10,
     shadowColor: "gray",
     shadowRadius: 4,
