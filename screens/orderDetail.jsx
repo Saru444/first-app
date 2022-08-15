@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Text, ScrollView, FlatList } from "react-native";
+import { StyleSheet, View, Text, FlatList } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
@@ -31,7 +31,7 @@ const OrderDetail = ({ route, navigation }) => {
   useEffect(() => {
     if (name === "") return;
     axios
-      .get(`https://94f6-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
+      .get(`https://56a0-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
       .then((res) => {
         let personInfo = res.data;
         setPersonInfo(personInfo);

@@ -79,7 +79,7 @@ const CheckOut = () => {
   useEffect(() => {
     if (name === "") return;
     axios
-      .get(`https://94f6-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
+      .get(`https://56a0-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
       .then((res) => {
         let personInfo = res.data;
         setPersonInfo(personInfo);
@@ -130,9 +130,9 @@ const CheckOut = () => {
       }
     }
     /*  console.log("activeDeliveryAddress:", activeDeliveryAddress); */
-    setLoading(true);
+    setLoading(true); 
     const check = await fetch(
-      "https://94f6-81-226-206-31.eu.ngrok.io/api/Order/createorder",
+      "https://56a0-81-226-206-31.eu.ngrok.io/api/Order/createorder",
       {
         method: "POST",
         headers: {
@@ -173,9 +173,9 @@ const CheckOut = () => {
     } else {
       Alert.alert("warning", "something is wrong!", [{ text: "ok" }]);
       return;
-    }
+    } 
   };
-  if (loading) return <SendLoad />;
+   if (loading) return <SendLoad />; 
 
   // om user använda coupon
   const showDiscountPrice = () => {
@@ -545,7 +545,7 @@ const CheckOut = () => {
               <Text style={styles.send}>{t("SKICKA BESTÄLLNING")}</Text>
             </Pressable>
           </View>
-          {loading && <SendLoad />}
+         {loading && <SendLoad />}
         </View>
       </ScrollView>
     );

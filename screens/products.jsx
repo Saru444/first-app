@@ -1,15 +1,15 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, FlatList, Button } from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
 import ProductItem from "../Components/ProductItem";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Dropdown from "../Components/dropdown";
 import { Searchbar } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import SwitchSelector from 'react-native-switch-selector';
+import SwitchSelector from "react-native-switch-selector";
 
 const Products = (props) => {
-  const {t,i18n} = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -24,7 +24,7 @@ const Products = (props) => {
     { label: t("KontorsMaterial"), value: "3" },
   ];
 
-  const options=[
+  const options = [
     { label: t("Engelska"), value: "en" },
     { label: t("kinesiska"), value: "cn" },
     { label: t("Svenska"), value: "sv" },
@@ -45,7 +45,7 @@ const Products = (props) => {
     if (id === "") return;
     axios
       .get(
-        `https://94f6-81-226-206-31.eu.ngrok.io/api/Product/getUserProducts/${id}`
+        `https://56a0-81-226-206-31.eu.ngrok.io/api/Product/getUserProducts/${id}`
       )
       .then((res) => {
         let products = res.data;
@@ -74,12 +74,14 @@ const Products = (props) => {
   return (
     <View style={styles.container}>
       <View style={styles.language}>
-       <SwitchSelector 
-       options={options} 
-       hasPadding initial={0} 
-       onPress={(language)=>{i18n.changeLanguage(language)}} 
-       buttonColor={"orange"}
-        
+        <SwitchSelector
+          options={options}
+          hasPadding
+          initial={0}
+          onPress={(language) => {
+            i18n.changeLanguage(language);
+          }}
+          buttonColor={"orange"}
         />
       </View>
       <Searchbar
@@ -99,7 +101,7 @@ const Products = (props) => {
             const queryData = searchQuery.toUpperCase();
             return itemData.indexOf(queryData) > -1;
           })
-          /*   .filter((item) => item.mainCategory===selected.label)  */
+          /*  .filter((item) => item.mainCategory===selected.label)   */
         }
         numColumns={2}
         renderItem={({ item }) => <ProductItem data={item} />}
@@ -120,6 +122,6 @@ const styles = StyleSheet.create({
   },
   language: {
     width: 375,
-    marginTop:50,
+    marginTop: 50,
   },
 });

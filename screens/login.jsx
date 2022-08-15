@@ -29,7 +29,7 @@ const Login = () => {
     }
   };
 
-  if (loading) return <AppLoad />;
+   if (loading) return <AppLoad />; 
 
   return (
     <View style={styles.body}>

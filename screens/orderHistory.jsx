@@ -30,7 +30,7 @@ const OrderHistory = () => {
   useEffect(() => {
     if (name === "") return;
     axios
-      .get(`https://94f6-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
+      .get(`https://56a0-81-226-206-31.eu.ngrok.io/api/UserDetails/${name}`)
       .then((res) => {
         let orderHistory = res.data.orderHistory;
         setOrderHistory(orderHistory);

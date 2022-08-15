@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import { StyleSheet, View, Text, Pressable,Button } from "react-native";
 import React, { useState, useEffect } from "react";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import { useNavigation } from "@react-navigation/native";
@@ -49,7 +49,7 @@ const ScanFun = () => {
   if (hasPermission === false) {
     return (
       <View style={styles.section1}>
-        <Text>Ingen tillgång till kamera</Text>
+        <Text>Ingen tillgång till kamera!</Text>
         <Button title="Tillåt kamera" onPress={() => askForPermission()} />
       </View>
     );

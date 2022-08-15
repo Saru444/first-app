@@ -46,13 +46,13 @@ const Map = () => {
           /*   image={require('../assets/reaklamrock.png')}
            */
         />
-        <Circle
+     {/*    <Circle
           center={{
             latitude: 59.213070195303956,
             longitude: 15.134695469514723,
           }}
           radius={300}
-        />
+        /> */}
       </MapView>
       <View style={styles.bottomContainer}>
         <BottomSheet

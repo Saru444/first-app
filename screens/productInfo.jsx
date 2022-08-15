@@ -95,7 +95,8 @@ const ProductInfo = (props) => {
             onChange={(value) => {
               setValue(value);
             }}        
-           value={0}
+            value={1} 
+            minValue={1}
             totalWidth={240}
             totalHeight={40}
             rounded
