@@ -1,17 +1,12 @@
 import { StyleSheet, View, Pressable, Image } from "react-native";
 import React, { useState } from "react";
 import { TextInput, Text } from "react-native-paper";
-import { useUserContext } from "../.expo/Context/userContext";
+import { useUserContext } from "../src/Context/userContext";
 import AppLoad from "./appLoad";
 import { useTranslation } from "react-i18next";
- 
-
-
-
- 
 
 const Login = () => {
-  const {t,i18n} =useTranslation();
+  const { t, i18n } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +24,7 @@ const Login = () => {
     }
   };
 
-   if (loading) return <AppLoad />; 
+  if (loading) return <AppLoad />;
 
   return (
     <View style={styles.body}>
